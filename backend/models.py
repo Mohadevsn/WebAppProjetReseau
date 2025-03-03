@@ -1,20 +1,13 @@
-from sqlalchemy import Column, Integer, String
-from database import Base
+from pydantic import BaseModel
 
-class Employee(Base):
-    __tablename__ = "employees"
-    id = Column(Integer, primary_key=True, index=True)
-    nom = Column(String, index=True)
-    poste = Column(String)
+class Employee(BaseModel):
+    nom : str
+    poste : str
 
-class Client(Base):
-    __tablename__ = "clients"
-    id = Column(Integer, primary_key=True, index=True)
-    nom = Column(String, index=True)
-    contact = Column(String)
+class Client(BaseModel):
+    nom : str
+    contact : str
 
-class Document(Base):
-    __tablename__ = "documents"
-    id = Column(Integer, primary_key=True, index=True)
-    titre = Column(String, index=True)
-    description = Column(String)
+class Document(BaseModel):
+    titre : str
+    description : str
