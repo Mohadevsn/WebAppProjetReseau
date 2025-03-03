@@ -5,3 +5,4 @@ app = FastAPI()
 @app.get("/")
 def root():
     return {"Welcome to the api"}
+
