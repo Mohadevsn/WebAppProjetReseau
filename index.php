@@ -1,4 +1,11 @@
 <?php
+// require 'auth.php';
+
+// if (!isAuthenticated()) {
+//     header("Location: login.php");
+//     exit();
+// }
+
 // Include the CRUD operations file
 require 'crud.php';
 
@@ -127,6 +134,54 @@ $clients = getClients();
                 <?php endforeach; ?>
             </tbody>
         </table>
+    </div>
+
+    <h1>Gestion des Fichier FTP</h1>
+    <div id="ftp-upload-form">
+        <h2>Televerser un fichier</h2>
+        <form action="crud.php" method="POST" enctype="multipart/form-data">
+            <label for="file_upload">Choisi un fichier:</label>
+            <input type="file" id="file_upload" name="file_upload" required>
+            <button type="submit">Upload</button>
+        </form>
+    </div>
+
+    <div id="ftp-file-list">
+        <h2>Fichiers sur le serveur FTP</h2>
+        <ul>
+            <?php
+            $ftp_config = include 'ftp_config.php';
+
+            echo $ftp_config['ftp_server'];
+
+            // Establish FTP connection
+            $ftp_conn = ftp_connect($ftp_config['ftp_server']) or die("Could not connect to " + $ftp_config['ftp_server']);
+            $login = ftp_login($ftp_conn, $ftp_config['ftp_user'], $ftp_config['ftp_pass']);
+
+            if ($login) {
+                // Get list of files
+                $file_list = ftp_nlist($ftp_conn, $ftp_config['ftp_root']);
+
+                if ($file_list) {
+                    foreach ($file_list as $file) {
+                        $file_name = basename($file);
+                        echo "<li>
+                                $file_name
+                                <a href='crud.php?download=$file_name'>Télécharger</a>
+                                <a href='crud.php?delete_file=$file_name' onclick=\"return confirm('Vous êtes sûr?')\">Supprimer</a>
+                              </li>";
+                    }
+                } else {
+                    echo "<li>Aucun fichier trouvé.</li>";
+                }
+            } else {
+                echo "<li>Échec de la connexion FTP.</li>";
+            }
+
+            // Close the FTP connection
+            ftp_close($ftp_conn);
+            ?>
+        </ul>
     </div>
     
 </body>

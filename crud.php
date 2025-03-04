@@ -1,4 +1,11 @@
 <?php
+require 'auth.php';
+
+if (!isAuthenticated()) {
+    header("Location: login.php");
+    exit();
+}
+
 // Database connection
 $host = 'localhost';
 $dbname = 'rxProjetDb';
@@ -11,6 +18,9 @@ try {
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
 }
+
+// Include FTP configuration
+$ftp_config = require 'ftp_config.php';
 
 // Function to get all employees
 function getEmployees() {
@@ -159,6 +169,92 @@ if (isset($_GET['edit'])) {
     if ($client) {
         echo json_encode($client);
         exit();
+    }
+}
+
+// Function to upload a file to FTP server
+function uploadFileToFTP($localFilePath, $remoteFileName) {
+    global $ftp_config;
+    $ftp_conn = ftp_connect($ftp_config['ftp_server']);
+    $login = ftp_login($ftp_conn, $ftp_config['ftp_user'], $ftp_config['ftp_pass']);
+
+    if (!$ftp_conn || !$login) {
+        die("FTP connection failed!");
+    }
+
+    $upload = ftp_put($ftp_conn, $ftp_config['ftp_root'] . '/' . $remoteFileName, $localFilePath, FTP_BINARY);
+
+    ftp_close($ftp_conn);
+
+    return $upload;
+}
+
+// Function to download a file from FTP server
+function downloadFileFromFTP($remoteFileName, $localFilePath) {
+    global $ftp_config;
+    $ftp_conn = ftp_connect($ftp_config['ftp_server']);
+    $login = ftp_login($ftp_conn, $ftp_config['ftp_user'], $ftp_config['ftp_pass']);
+
+    if (!$ftp_conn || !$login) {
+        die("FTP connection failed!");
+    }
+
+    $download = ftp_get($ftp_conn, $localFilePath, $ftp_config['ftp_root'] . '/' . $remoteFileName, FTP_BINARY);
+
+    ftp_close($ftp_conn);
+
+    return $download;
+}
+
+// Function to delete a file from FTP server
+function deleteFileFromFTP($remoteFileName) {
+    global $ftp_config;
+    $ftp_conn = ftp_connect($ftp_config['ftp_server']);
+    $login = ftp_login($ftp_conn, $ftp_config['ftp_user'], $ftp_config['ftp_pass']);
+
+    if (!$ftp_conn || !$login) {
+        die("FTP connection failed!");
+    }
+
+    $delete = ftp_delete($ftp_conn, $ftp_config['ftp_root'] . '/' . $remoteFileName);
+
+    ftp_close($ftp_conn);
+
+    return $delete;
+}
+
+// Handle file upload
+if (isset($_FILES['file_upload'])) {
+    $localFilePath = $_FILES['file_upload']['tmp_name'];
+    $remoteFileName = $_FILES['file_upload']['name'];
+
+    if (uploadFileToFTP($localFilePath, $remoteFileName)) {
+        echo "File uploaded successfully!";
+    } else {
+        echo "File upload failed!";
+    }
+}
+
+// Handle file download
+if (isset($_GET['download'])) {
+    $remoteFileName = $_GET['download'];
+    $localFilePath = 'downloads/' . $remoteFileName;
+
+    if (downloadFileFromFTP($remoteFileName, $localFilePath)) {
+        echo "File downloaded successfully!";
+    } else {
+        echo "File download failed!";
+    }
+}
+
+// Handle file delete
+if (isset($_GET['delete_file'])) {
+    $remoteFileName = $_GET['delete_file'];
+
+    if (deleteFileFromFTP($remoteFileName)) {
+        echo "File deleted successfully!";
+    } else {
+        echo "File delete failed!";
     }
 }
 
