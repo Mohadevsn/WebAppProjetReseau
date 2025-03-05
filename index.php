@@ -81,7 +81,7 @@ $clients = getClients();
         <table>
             <thead>
                 <tr>
-                    <th>Title</th>
+                    <th>Titre</th>
                     <th>Actions</th>
                 </tr>
             </thead>
